@@ -122,20 +122,20 @@ After running the app, your destination folder will look like this:
 Destination/
 ├── Audio/
 │   ├── 2023/
-│   │   ├── 2025-04-29 - podcast_intro - aB3Xy7QzW1kL.mp3
+│   │   ├── 2023-04-16 - podcast_intro - aB3Xy7QzW1kL.mp3
 │   │   └── ...
 │   └── 2024/
-│       ├── 2025-04-29 - lecture_recording - pL9mN2qR5tYx.mp3
+│       ├── 2024-08-07 - lecture_recording - pL9mN2qR5tYx.mp3
 │       └── ...
 ├── Images/
 │   ├── 2023/
-│   │   ├── 2025-04-29 - sunset_photo - xY7zW1kLaB3X.jpg
+│   │   ├── 2023-11-06 - sunset_photo - xY7zW1kLaB3X.jpg
 │   │   └── ...
 │   └── 2024/
 │       └── ...
 ├── Videos/
 │   ├── 2024/
-│   │   ├── 2025-04-29 - presentation - mN2qR5tYxpL9.mp4
+│   │   ├── 2024-07-21 - presentation - mN2qR5tYxpL9.mp4
 │   │   └── ...
 │   └── ...
 ├── Documents/
@@ -175,8 +175,8 @@ Each operation generates a timestamped log file in the destination folder with t
 
 📝 Detailed Operations:
 ───────────────────────────────────────────
-✅ Moved: photo1.jpg → Images/2024/2025-04-29 - photo1 - aB3Xy7QzW1kL.jpg
-✅ Moved: music.mp3 → Audio/2023/2025-04-29 - music - xY7zW1kLaB3X.mp3
+✅ Moved: photo1.jpg → Images/2024/2024-05-17 - photo1 - aB3Xy7QzW1kL.jpg
+✅ Moved: music.mp3 → Audio/2023/2023-12-01 - music - xY7zW1kLaB3X.mp3
 ⚠️ File not found: missing_file.pdf
 ...
 
