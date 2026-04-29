@@ -19,10 +19,16 @@ public:
     void run() override;
 
 private:
-    QString generateUniqueFilename(const QString &directory, 
-                                   const QString &date, 
-                                   const QString &extension);
+    QString generateUniqueFilename(const QString &directory,
+                                   const QString &date,
+                                   const QString &extension,
+                                   const QString &originalName);
+    QString getYearFolder(const QString &baseDir, const QString &category,
+                          const QString &filePath);
+    QString generateLogFileName();
+
     void appendLog(const QString &msg);
+    void writeLogFile(const QStringList &logEntries);
     void emitProgress(int percent, int moved, int skipped, int total);
     void emitFinished(int moved, int skipped, int total);
 
