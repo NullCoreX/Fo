@@ -28,7 +28,7 @@ FileMoveTask::FileMoveTask(const QString &sourcePath,
 }
 
 void FileMoveTask::run() {
-    QStringList logEntries;  // برای ذخیره لاگ‌ها
+    QStringList logEntries;
 
     for (int i = 0; i < total; ++i) {
         const QString &fileName = fileList.at(i);
@@ -43,8 +43,6 @@ void FileMoveTask::run() {
         }
 
         QString category = CategoryManager::instance().getCategory(fileInfo.suffix());
-
-        // ایجاد مسیر با پوشه سال
         QString yearPath = getYearFolder(destBaseDir, category, fileInfo.absoluteFilePath());
 
         QString extension = fileInfo.suffix();
