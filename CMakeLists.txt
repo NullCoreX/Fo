@@ -1,0 +1,80 @@
+cmake_minimum_required(VERSION 3.16)
+project(FileOrganizer VERSION 1.0.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+
+set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(UI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ui)
+
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${UI_DIR})
+
+file(GLOB_RECURSE SOURCES
+    ${SRC_DIR}/*.cc
+    ${SRC_DIR}/*.cpp
+    ${SRC_DIR}/*.cxx
+)
+
+file(GLOB_RECURSE HEADERS
+    ${INCLUDE_DIR}/*.h
+    ${INCLUDE_DIR}/*.hpp
+)
+
+file(GLOB_RECURSE UI_FILES
+    ${UI_DIR}/*.ui
+)
+
+set(MAIN_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/fo.cc)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
+
+add_library(${PROJECT_NAME}_lib STATIC
+    ${SOURCES}
+    ${HEADERS}
+    ${UI_FILES}
+)
+
+target_include_directories(${PROJECT_NAME}_lib PUBLIC
+    ${INCLUDE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+target_link_libraries(${PROJECT_NAME}_lib PUBLIC
+    Qt6::Widgets
+)
+
+add_executable(${PROJECT_NAME}
+    ${MAIN_SOURCE}
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    ${PROJECT_NAME}_lib
+)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    OUTPUT_NAME "FileOrganizer"
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+set_target_properties(${PROJECT_NAME}_lib PROPERTIES
+    OUTPUT_NAME "FileOrganizerLib"
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+)
+
+install(TARGETS ${PROJECT_NAME}
+    RUNTIME DESTINATION bin
+)
+
+install(TARGETS ${PROJECT_NAME}_lib
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+)
