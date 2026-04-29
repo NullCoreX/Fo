@@ -57,7 +57,9 @@
 ## 📸 Screenshot
 
 > *(Add a screenshot of your app here)*  
-> `screenshot.png`
+> 
+> 
+
 
 ---
 
@@ -76,24 +78,23 @@ Before building, make sure you have the following installed:
 ### 1️⃣ Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/file-organizer-pro.git
-cd file-organizer-pro
+git clone https://github.com/NullCoreX/Fo.git
+cd Fo/
 ```
 
 ### 2️⃣ Build with CMake
 
 ```bash
-mkdir build && cd build
-cmake ..
-cmake --build .
+cmake -B build
+cmake --build build
 ```
 
 ### 3️⃣ Run the application
 
 ```bash
-./Test   # Linux/macOS
-Test.exe # Windows
+./build/bin/FileOrganizer
 ```
+
 ---
 
 ## 🧩 How It Works
@@ -120,8 +121,7 @@ Destination/
 │   ├── 2025-04-29 - pL9mN2qR5tYx.jpg
 │   └── ...
 ├── Videos/
-├── Documents/
-└── Others/
+└── Documents/
 ```
 
 ---
@@ -134,7 +134,6 @@ Destination/
 | 🖼️ **Images**   | `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.svg`                           |
 | 🎬 **Videos**   | `.mp4`, `.avi`, `.mkv`, `.mov`, `.wmv`                                    |
 | 📄 **Documents**| `.pdf`, `.doc`, `.docx`, `.txt`, `.xlsx`, `.pptx`                         |
-| 📦 **Others**   | Any file extension not listed above                                       |
 
 ---
 
