@@ -5,6 +5,7 @@
 #include <QDateTime>
 #include <QMetaObject>
 #include <QFile>
+#include <QTextStream>
 #include "CategoryManager.h"
 
 FileMoveTask::FileMoveTask(const QString &sourcePath,
@@ -27,39 +28,44 @@ FileMoveTask::FileMoveTask(const QString &sourcePath,
 }
 
 void FileMoveTask::run() {
+    QStringList logEntries;  // برای ذخیره لاگ‌ها
+
     for (int i = 0; i < total; ++i) {
         const QString &fileName = fileList.at(i);
         QFileInfo fileInfo(sourcePath + "/" + fileName);
 
         if (!fileInfo.exists()) {
-            appendLog(QString("⚠️ File not found: %1").arg(fileName));
+            QString msg = QString("⚠️ File not found: %1").arg(fileName);
+            appendLog(msg);
+            logEntries << msg;
             skippedCount++;
             continue;
         }
 
         QString category = CategoryManager::instance().getCategory(fileInfo.suffix());
-        QDir destDir(destBaseDir + "/" + category);
 
-        if (!destDir.exists()) {
-            if (!destDir.mkpath(".")) {
-                appendLog(QString("❌ Failed to create directory: %1").arg(category));
-                skippedCount++;
-                continue;
-            }
-        }
+        // ایجاد مسیر با پوشه سال
+        QString yearPath = getYearFolder(destBaseDir, category, fileInfo.absoluteFilePath());
 
         QString extension = fileInfo.suffix();
-        QString newFileName = generateUniqueFilename(destDir.absolutePath(), currentDate, extension);
-        QString destPath = destDir.filePath(newFileName);
+        QString baseName = fileInfo.completeBaseName();
+
+        QString newFileName = generateUniqueFilename(yearPath, currentDate, extension, baseName);
+        QString destPath = yearPath + "/" + newFileName;
 
         if (QFile::rename(fileInfo.absoluteFilePath(), destPath)) {
-            appendLog(QString("✅ Moved: %1 → %2/%3")
-                          .arg(fileName)
-                          .arg(category)
-                          .arg(newFileName));
+            QString msg = QString("✅ Moved: %1 → %2/%3/%4")
+                              .arg(fileName)
+                              .arg(category)
+                              .arg(yearPath.section('/', -1))
+                              .arg(newFileName);
+            appendLog(msg);
+            logEntries << msg;
             movedCount++;
         } else {
-            appendLog(QString("❌ Failed to move: %1").arg(fileName));
+            QString msg = QString("❌ Failed to move: %1").arg(fileName);
+            appendLog(msg);
+            logEntries << msg;
             skippedCount++;
         }
 
@@ -67,12 +73,15 @@ void FileMoveTask::run() {
         emitProgress(progress, movedCount, skippedCount, total);
     }
 
+    writeLogFile(logEntries);
+
     emitFinished(movedCount, skippedCount, total);
 }
 
-QString FileMoveTask::generateUniqueFilename(const QString &directory, 
-                                              const QString &date, 
-                                              const QString &extension) {
+QString FileMoveTask::generateUniqueFilename(const QString &directory,
+                                             const QString &date,
+                                             const QString &extension,
+                                             const QString &originalName) {
     const QString chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     const int randomCodeLength = 12;
 
@@ -88,7 +97,12 @@ QString FileMoveTask::generateUniqueFilename(const QString &directory,
             randomCode.append(chars.at(generator->bounded(chars.length())));
         }
 
-        newFileName = QString("%1 - %2.%3").arg(date).arg(randomCode).arg(extension);
+        newFileName = QString("%1 - %2 - %3.%4")
+                          .arg(date)
+                          .arg(originalName)
+                          .arg(randomCode)
+                          .arg(extension);
+
         QFile checkFile(directory + "/" + newFileName);
         if (!checkFile.exists()) {
             unique = true;
@@ -98,8 +112,9 @@ QString FileMoveTask::generateUniqueFilename(const QString &directory,
 
     if (!unique) {
         QString timestamp = QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch());
-        newFileName = QString("%1 - %2_%3.%4")
+        newFileName = QString("%1 - %2 - %3_%4.%5")
                           .arg(date)
+                          .arg(originalName)
                           .arg(timestamp)
                           .arg(QRandomGenerator::global()->bounded(10000))
                           .arg(extension);
@@ -108,11 +123,74 @@ QString FileMoveTask::generateUniqueFilename(const QString &directory,
     return newFileName;
 }
 
+QString FileMoveTask::getYearFolder(const QString &baseDir, const QString &category,
+                                    const QString &filePath) {
+    QFileInfo fileInfo(filePath);
+    QDateTime lastModified = fileInfo.lastModified();
+    QString year = lastModified.toString("yyyy");
+
+    if (year.isEmpty() || year.toInt() < 2000 || year.toInt() > 2100) {
+        year = QDate::currentDate().toString("yyyy");
+    }
+
+    QString yearPath = baseDir + "/" + category + "/" + year;
+    QDir yearDir(yearPath);
+
+    if (!yearDir.exists()) {
+        yearDir.mkpath(".");
+    }
+
+    return yearPath;
+}
+
+QString FileMoveTask::generateLogFileName() {
+    QDateTime now = QDateTime::currentDateTime();
+    return QString("organize_log_%1.txt")
+        .arg(now.toString("yyyy-MM-dd_HH-mm-ss"));
+}
+
 void FileMoveTask::appendLog(const QString &msg) {
     if (!logWidget) return;
     QMetaObject::invokeMethod(logWidget.data(), [logWidget = logWidget, msg]() {
         if (logWidget) logWidget->append(msg);
     }, Qt::QueuedConnection);
+}
+
+void FileMoveTask::writeLogFile(const QStringList &logEntries) {
+    QString logFileName = generateLogFileName();
+    QString logFilePath = destBaseDir + "/" + logFileName;
+
+    QFile logFile(logFilePath);
+    if (logFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream stream(&logFile);
+
+        stream << "═══════════════════════════════════════════\n";
+        stream << "📋 File Organizer Pro - Organization Log\n";
+        stream << "═══════════════════════════════════════════\n";
+        stream << "📅 Date: " << QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss") << "\n";
+        stream << "📂 Source: " << sourcePath << "\n";
+        stream << "🎯 Destination: " << destBaseDir << "\n";
+        stream << "📊 Total files processed: " << total << "\n";
+        stream << "✅ Successfully moved: " << movedCount << "\n";
+        stream << "⚠️ Skipped/Failed: " << skippedCount << "\n";
+        stream << "═══════════════════════════════════════════\n\n";
+
+        stream << "📝 Detailed Operations:\n";
+        stream << "───────────────────────────────────────────\n";
+        for (const QString &entry : logEntries) {
+            stream << entry << "\n";
+        }
+
+        stream << "\n═══════════════════════════════════════════\n";
+        stream << "🏁 Operation completed at: "
+               << QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss") << "\n";
+
+        logFile.close();
+
+        appendLog(QString("📝 Log file created: %1").arg(logFileName));
+    } else {
+        appendLog("❌ Failed to create log file!");
+    }
 }
 
 void FileMoveTask::emitProgress(int percent, int moved, int skipped, int total) {
